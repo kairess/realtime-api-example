@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 연인</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            overflow: hidden;
+        }
+        #visualizer {
+            width: 200px;
+            height: 200px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(231, 76, 60, 0.7);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        #start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #start-button:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div id="visualizer"></div>
+    <button id="start-button">대화 시작</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const visualizer = document.getElementById('visualizer');
+        const startButton = document.getElementById('start-button');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let currentAudio = null;
+
+        startButton.addEventListener('click', () => {
+            socket.emit('start_conversation');
+            audioContext.resume();
+            startButton.style.display = 'none';
+        });
+
+        socket.on('audio', (audioBuffer) => {
+            const uint8Array = new Uint8Array(audioBuffer);
+            updateVisualizer(uint8Array);
+            playAudio(uint8Array);
+        });
+
+        function updateVisualizer(audioData) {
+            const average = audioData.reduce((a, b) => a + b, 0) / audioData.length;
+            const scale = 1 + (average / 128) * 0.5;
+            const hue = 0; // 빨간색
+            const saturation = 100 - (average / 2.56);
+            const lightness = 50 + (average / 5.12);
+
+            visualizer.style.transform = `scale(${scale})`;
+            visualizer.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+            // 새로운 blob 생성
+            const blob = document.createElement('div');
+            blob.className = 'blob';
+            blob.style.width = `${average}px`;
+            blob.style.height = `${average}px`;
+            blob.style.left = `${Math.random() * 100}%`;
+            blob.style.top = `${Math.random() * 100}%`;
+            visualizer.appendChild(blob);
+
+            // 2초 후 blob 제거
+            setTimeout(() => blob.remove(), 2000);
+        }
+
+        function playAudio(audioData) {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+
+            const blob = new Blob([audioData], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            currentAudio = new Audio(url);
+            
+            currentAudio.onended = () => {
+                URL.revokeObjectURL(url);
+                currentAudio = null;
+            };
+
+            currentAudio.play().catch(error => console.error('오디오 재생 오류:', error));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "her",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server_only.js",
+  "scripts": {
+    "start": "node server_only.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",
+    "aplay": "^1.2.0",
+    "chalk": "^5.3.0",
+    "cli-progress": "^3.12.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "mic": "^2.1.2",
+    "node-wav": "^0.0.2",
+    "socket.io": "^4.8.0",
+    "speaker": "^0.5.5",
+    "wav": "^1.0.2",
+    "ws": "^8.18.0"
+  },
+  "type": "module"
+}
